@@ -66,7 +66,7 @@ export default function AddMedicationScreen() {
 
   // Schedule
   const [scheduleType, setScheduleType] = useState<ScheduleType>('daily');
-  const [times, setTimes] = useState<string[]>(['08:00']);
+  const [times, setTimes] = useState<{ id: string; value: string }[]>([{ id: '1', value: '08:00' }]);
   const [intervalHours, setIntervalHours] = useState('8');
   const [selectedDays, setSelectedDays] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]);
   const [withMeals, setWithMeals] = useState(false);
@@ -78,9 +78,6 @@ export default function AddMedicationScreen() {
   const [refillReminderAt, setRefillReminderAt] = useState('7');
 
   // Caregiver
-  const [caregiverAlerts, setCaregiverAlerts] = useState(false);
-  const [caregiverName, setCaregiverName] = useState('');
-  const [caregiverPhone, setCaregiverPhone] = useState('');
   const [escalatingAlerts, setEscalatingAlerts] = useState(true);
 
   // Validation errors
@@ -120,7 +117,7 @@ export default function AddMedicationScreen() {
         color_hex: accentColor,
         schedule: {
           type: scheduleType,
-          times: scheduleType === 'every-x-hours' || scheduleType === 'as-needed' ? [] : times,
+          times: scheduleType === 'every-x-hours' || scheduleType === 'as-needed' ? [] : times.map(t => t.value),
           intervalHours: scheduleType === 'every-x-hours' ? Number(intervalHours) : undefined,
           daysOfWeek: scheduleType === 'specific-days' ? selectedDays : undefined,
           withMeals,
@@ -130,9 +127,7 @@ export default function AddMedicationScreen() {
         pillCount: pillCount ? Number(pillCount) : undefined,
         pillsPerDose: pillsPerDose ? Number(pillsPerDose) : 1,
         refillReminderAt: refillReminderAt ? Number(refillReminderAt) : 7,
-        caregiverAlerts,
-        caregiverName: caregiverName.trim() || undefined,
-        caregiverPhone: caregiverPhone.trim() || undefined,
+        caregiverAlerts: false,
         escalatingAlerts,
         escalateAfterMinutes: 30,
         isActive: true,
@@ -146,11 +141,11 @@ export default function AddMedicationScreen() {
   }
 
   function addTime() {
-    setTimes(prev => [...prev, '12:00']);
+    setTimes(prev => [...prev, { id: String(Date.now()), value: '12:00' }]);
   }
 
   function updateTime(index: number, value: string) {
-    setTimes(prev => prev.map((t, i) => (i === index ? value : t)));
+    setTimes(prev => prev.map((t, i) => (i === index ? { ...t, value } : t)));
   }
 
   function removeTime(index: number) {
@@ -194,8 +189,6 @@ export default function AddMedicationScreen() {
         <Card style={styles.card}>
           <Input label="Medication Name *" value={name} onChangeText={setName}
             placeholder="e.g. Metformin" error={errors.name} />
-          <Input label="Generic Name" value={genericName} onChangeText={setGenericName}
-            placeholder="e.g. metformin hydrochloride" />
           <View style={styles.row}>
             <Input label="Dosage *" value={dosage} onChangeText={setDosage}
               placeholder="500" keyboardType="numeric" error={errors.dosage}
@@ -225,10 +218,6 @@ export default function AddMedicationScreen() {
             placeholder="e.g. Take with food" multiline />
           <Input label="Prescribed By" value={prescribedBy} onChangeText={setPrescribedBy}
             placeholder="Doctor's name" />
-          <Input label="Pharmacy" value={pharmacy} onChangeText={setPharmacy}
-            placeholder="Pharmacy name" />
-          <Input label="Rx Number" value={rxNumber} onChangeText={setRxNumber}
-            placeholder="Prescription number" />
         </Card>
 
         {/* Schedule */}
@@ -245,10 +234,10 @@ export default function AddMedicationScreen() {
             <View style={{ gap: 8, marginTop: 8 }}>
               <Text style={styles.inputLabel}>Times</Text>
               {times.map((t, i) => (
-                <View key={`time-${t}-${i}`} style={styles.timeRow}>
+                <View key={t.id} style={styles.timeRow}>
                   <Input
                     containerStyle={{ flex: 1 }}
-                    value={t}
+                    value={t.value}
                     onChangeText={v => updateTime(i, v)}
                     placeholder="HH:MM"
                     keyboardType="numbers-and-punctuation"
@@ -321,21 +310,6 @@ export default function AddMedicationScreen() {
         {/* Caregiver Alerts */}
         <Text style={styles.sectionLabel}>CAREGIVER ALERTS</Text>
         <Card style={styles.card}>
-          <View style={styles.switchRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.switchLabel}>Notify caregiver on missed doses</Text>
-              <Text style={styles.switchDesc}>Send an alert if this dose is missed</Text>
-            </View>
-            <Switch value={caregiverAlerts} onValueChange={setCaregiverAlerts}
-              trackColor={{ true: Colors.primary }} thumbColor="#fff" />
-          </View>
-          {caregiverAlerts && (
-            <>
-              <Input label="Caregiver Name" value={caregiverName} onChangeText={setCaregiverName} placeholder="Name" />
-              <Input label="Caregiver Phone / Email" value={caregiverPhone} onChangeText={setCaregiverPhone}
-                placeholder="Phone or email" keyboardType="email-address" />
-            </>
-          )}
           <View style={styles.switchRow}>
             <View style={{ flex: 1 }}>
               <Text style={styles.switchLabel}>Escalating alerts</Text>

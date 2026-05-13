@@ -8,7 +8,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { Colors } from '../../constants/colors';
-import { scanPrescription } from '../../services/geminiService';
+import { scanPrescription } from '../../services/visionService';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import type { ScannedPrescription } from '../../types';
