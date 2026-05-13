@@ -190,10 +190,6 @@ export default function SettingsScreen() {
             <Text style={styles.aboutValue}>1.0.0</Text>
           </View>
           <View style={styles.divider} />
-          <View style={styles.aboutRow}>
-            <Text style={styles.aboutKey}>OCR Engine</Text>
-            <Text style={styles.aboutValue}>Gemini 2.5 Flash</Text>
-          </View>
         </Card>
 
         <Text style={styles.disclaimer}>
