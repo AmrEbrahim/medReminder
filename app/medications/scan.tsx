@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { scanPrescription } from '../../services/visionService';
 import { Card } from '../../components/ui/Card';
@@ -82,7 +83,7 @@ export default function ScanScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.permissionScreen}>
-          <Text style={styles.permissionIcon}>📷</Text>
+          <Ionicons name="camera-outline" size={64} color={Colors.primary} />
           <Text style={styles.permissionTitle}>Camera Access Needed</Text>
           <Text style={styles.permissionDesc}>
             medReminder needs camera access to scan prescription labels.
@@ -102,7 +103,7 @@ export default function ScanScreen() {
           )}
           <View style={styles.processingOverlay}>
             <ActivityIndicator size="large" color="#fff" />
-            <Text style={styles.processingText}>Reading prescription with Gemini AI...</Text>
+            <Text style={styles.processingText}>Reading prescription with AI...</Text>
           </View>
         </View>
       </SafeAreaView>
@@ -190,7 +191,8 @@ export default function ScanScreen() {
         {/* Bottom actions */}
         <View style={styles.cameraActions}>
           <TouchableOpacity style={styles.libraryBtn} onPress={pickFromLibrary}>
-            <Text style={styles.libraryBtnText}>📁{'\n'}Library</Text>
+           <Ionicons name="image-outline" size={32} color="gray" />
+            {/* <Text style={styles.libraryBtnText}>📁{'\n'}Library</Text> */}
           </TouchableOpacity>
           <TouchableOpacity style={styles.captureBtn} onPress={takePicture}>
             <View style={styles.captureBtnInner} />
@@ -222,7 +224,7 @@ const styles = StyleSheet.create({
   captureBtnInner: { width: 58, height: 58, borderRadius: 29, backgroundColor: '#fff' },
 
   permissionScreen: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 16, backgroundColor: Colors.background },
-  permissionIcon: { fontSize: 64 },
+
   permissionTitle: { fontSize: 22, fontWeight: '800', color: Colors.textPrimary, textAlign: 'center' },
   permissionDesc: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
 

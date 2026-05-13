@@ -4,6 +4,7 @@ import {
   TouchableOpacity, Alert, TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { useSettingsStore } from '../../store/settingsStore';
 import { useMedicationStore } from '../../store/medicationStore';
@@ -11,17 +12,19 @@ import { useDoseStore } from '../../store/doseStore';
 import { Card } from '../../components/ui/Card';
 import { scheduleAllNotifications } from '../../services/notificationService';
 
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
+
 function SettingRow({
   icon, label, description, right,
-}: { icon: string; label: string; description?: string; right: React.ReactNode }) {
+}: { readonly icon: IoniconName; readonly label: string; readonly description?: string; readonly right: React.ReactNode }) {
   return (
     <View style={styles.settingRow}>
       <View style={styles.settingIconWrap}>
-        <Text style={styles.settingIcon}>{icon}</Text>
+        <Ionicons name={icon} size={20} color={Colors.textSecondary} />
       </View>
       <View style={styles.settingText}>
         <Text style={styles.settingLabel}>{label}</Text>
-        {description && <Text style={styles.settingDesc}>{description}</Text>}
+        {!!description && <Text style={styles.settingDesc}>{description}</Text>}
       </View>
       {right}
     </View>
@@ -78,15 +81,6 @@ export default function SettingsScreen() {
               <Text style={styles.statLine}>{stats.totalMeds} medications · {stats.totalLogs} dose logs</Text>
             </View>
           </View>
-          <TextInput
-            style={styles.emailInput}
-            value={caregiverEmail}
-            onChangeText={setCaregiverEmail}
-            placeholder="Caregiver email (optional)"
-            placeholderTextColor={Colors.textTertiary}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
           <TouchableOpacity style={styles.saveBtn} onPress={handleSaveProfile}>
             <Text style={styles.saveBtnText}>Save Profile</Text>
           </TouchableOpacity>
@@ -96,7 +90,7 @@ export default function SettingsScreen() {
         <Text style={styles.sectionLabel}>NOTIFICATIONS</Text>
         <Card style={styles.card}>
           <SettingRow
-            icon="🔔"
+            icon="notifications-outline"
             label="Medication Reminders"
             description="Receive alerts at scheduled times"
             right={
@@ -110,7 +104,7 @@ export default function SettingsScreen() {
           />
           <View style={styles.divider} />
           <SettingRow
-            icon="🔊"
+            icon="volume-high-outline"
             label="Sound"
             right={
               <Switch
@@ -123,7 +117,7 @@ export default function SettingsScreen() {
           />
           <View style={styles.divider} />
           <SettingRow
-            icon="📳"
+            icon="phone-portrait-outline"
             label="Vibration"
             right={
               <Switch
@@ -177,9 +171,9 @@ export default function SettingsScreen() {
         <Text style={styles.sectionLabel}>TOOLS</Text>
         <Card style={styles.card}>
           <TouchableOpacity style={styles.actionRow} onPress={handleRescheduleNotifications}>
-            <Text style={styles.actionIcon}>🔄</Text>
+            <Ionicons name="refresh-outline" size={20} color={Colors.textPrimary} />
             <Text style={styles.actionText}>Reschedule All Notifications</Text>
-            <Text style={styles.chevron}>›</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textTertiary} />
           </TouchableOpacity>
         </Card>
 
@@ -203,7 +197,7 @@ export default function SettingsScreen() {
         </Card>
 
         <Text style={styles.disclaimer}>
-          ⚕️ medReminder is a reminder tool only. Always follow your doctor's instructions. Do not use this app as medical advice.
+          medReminder is a reminder tool only. Always follow your doctor's instructions. Do not use this app as medical advice.
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -230,7 +224,6 @@ const styles = StyleSheet.create({
   saveBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   settingRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 12 },
   settingIconWrap: { width: 36, height: 36, borderRadius: 10, backgroundColor: Colors.surfaceVariant, alignItems: 'center', justifyContent: 'center' },
-  settingIcon: { fontSize: 18 },
   settingText: { flex: 1 },
   settingLabel: { fontSize: 15, fontWeight: '600', color: Colors.textPrimary },
   settingDesc: { fontSize: 12, color: Colors.textSecondary, marginTop: 1 },
@@ -242,9 +235,7 @@ const styles = StyleSheet.create({
   chipTextActive: { color: '#fff' },
   cardHint: { fontSize: 12, color: Colors.textSecondary, marginBottom: 4 },
   actionRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, gap: 12 },
-  actionIcon: { fontSize: 20 },
   actionText: { flex: 1, fontSize: 15, fontWeight: '600', color: Colors.textPrimary },
-  chevron: { fontSize: 20, color: Colors.textTertiary },
   aboutRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
   aboutKey: { fontSize: 14, color: Colors.textSecondary },
   aboutValue: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },

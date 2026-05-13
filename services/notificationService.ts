@@ -1,7 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
 import { buildScheduledDatetime } from '../utils/scheduleUtils';
-import { getScheduledTimesToday } from '../utils/scheduleUtils';
 import type { Medication } from '../types';
 
 Notifications.setNotificationHandler({
@@ -112,16 +110,37 @@ export async function scheduleEscalatingAlert(
   return id;
 }
 
+export async function scheduleSnoozeNotification(
+  med: Medication,
+  originalScheduledTime: string,
+  snoozeMinutes: number,
+): Promise<string> {
+  const date = new Date(Date.now() + snoozeMinutes * 60000);
+  return Notifications.scheduleNotificationAsync({
+    content: {
+      title: `Time to take ${med.name}`,
+      body: `${med.dosage}${med.unit} — snoozed ${snoozeMinutes}m reminder`,
+      data: { medicationId: med.id, scheduledTime: originalScheduledTime },
+      categoryIdentifier: 'DOSE_REMINDER',
+      sound: true,
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date,
+    },
+  });
+}
+
 export async function registerNotificationCategories(): Promise<void> {
   await Notifications.setNotificationCategoryAsync('DOSE_REMINDER', [
     {
       identifier: 'TAKEN',
-      buttonTitle: '✅ Taken',
+      buttonTitle: 'Taken',
       options: { isDestructive: false, isAuthenticationRequired: false },
     },
     {
       identifier: 'SNOOZE',
-      buttonTitle: '⏰ Snooze 10m',
+      buttonTitle: 'Snooze',
       options: { isDestructive: false, isAuthenticationRequired: false },
     },
     {

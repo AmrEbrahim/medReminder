@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  Alert, Switch,
+  Alert, Switch, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Colors } from '../../constants/colors';
 import { useMedicationStore } from '../../store/medicationStore';
@@ -11,6 +12,7 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { checkInteractions } from '../../constants/drugInteractions';
+import { checkInteractionsOpenFDA, mergeInteractions } from '../../services/openFDAService';
 import { InteractionAlert } from '../../components/InteractionAlert';
 import { DAY_NAMES } from '../../utils/dateUtils';
 import type { MedicationForm, DosageUnit, ScheduleType } from '../../types';
@@ -83,10 +85,39 @@ export default function AddMedicationScreen() {
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const interactions = checkInteractions([
+  // Drug interaction checks
+  const [fdaInteractions, setFdaInteractions] = useState<import('../../types').DrugInteraction[]>([]);
+  const [fdaLoading, setFdaLoading] = useState(false);
+  const fdaTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const localInteractions = checkInteractions([
     ...medications.filter(m => m.isActive).map(m => m.name),
     name,
   ]);
+  const interactions = mergeInteractions(localInteractions, fdaInteractions);
+
+  useEffect(() => {
+    const medNames = [
+      ...medications.filter(m => m.isActive).map(m => m.name),
+      name,
+    ].filter(n => n.length > 2);
+
+    clearTimeout(fdaTimer.current);
+
+    if (medNames.length < 2) {
+      setFdaInteractions([]);
+      return;
+    }
+
+    setFdaLoading(true);
+    fdaTimer.current = setTimeout(() => {
+      checkInteractionsOpenFDA(medNames)
+        .then(r => { setFdaInteractions(r); setFdaLoading(false); })
+        .catch(() => setFdaLoading(false));
+    }, 800);
+
+    return () => clearTimeout(fdaTimer.current);
+  }, [name, medications]);
 
   function validate(): boolean {
     const e: Record<string, string> = {};
@@ -166,8 +197,16 @@ export default function AddMedicationScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Interaction alert if new med conflicts */}
-        {name.length > 2 && interactions.length > 0 && (
-          <InteractionAlert interactions={interactions} />
+        {name.length > 2 && (
+          <>
+            {fdaLoading && (
+              <View style={styles.fdaCheckingRow}>
+                <ActivityIndicator size="small" color={Colors.primary} />
+                <Text style={styles.fdaCheckingText}>Checking FDA database...</Text>
+              </View>
+            )}
+            {interactions.length > 0 && <InteractionAlert interactions={interactions} />}
+          </>
         )}
 
         {/* Color */}
@@ -244,7 +283,7 @@ export default function AddMedicationScreen() {
                   />
                   {times.length > 1 && (
                     <TouchableOpacity style={styles.removeBtn} onPress={() => removeTime(i)}>
-                      <Text style={styles.removeBtnText}>✕</Text>
+                      <Ionicons name="close" size={14} color={Colors.error} />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -320,7 +359,7 @@ export default function AddMedicationScreen() {
           </View>
         </Card>
 
-        <Button label="Save Medication" onPress={handleSave} loading={saving} size="lg" style={styles.saveBtn} />
+        <Button label="Save Medication" onPress={handleSave} loading={saving} size="lg" style={styles.saveBtn} disabled={interactions.length > 0} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -344,7 +383,6 @@ const styles = StyleSheet.create({
   chipTextActive: { color: '#fff' },
   timeRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   removeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: Colors.errorLight, alignItems: 'center', justifyContent: 'center' },
-  removeBtnText: { fontSize: 12, color: Colors.error, fontWeight: '700' },
   addTimeBtn: { borderStyle: 'dashed', borderWidth: 1.5, borderColor: Colors.border, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   addTimeBtnText: { color: Colors.primary, fontWeight: '600', fontSize: 14 },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
@@ -353,4 +391,6 @@ const styles = StyleSheet.create({
   inputSuffix: { fontSize: 14, color: Colors.textSecondary, marginRight: 4 },
   saveBtn: { marginTop: 16 },
   errorText: { fontSize: 12, color: Colors.error },
+  fdaCheckingRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  fdaCheckingText: { fontSize: 12, color: Colors.textSecondary },
 });

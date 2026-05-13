@@ -1,22 +1,25 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/colors';
 import { formatTime } from '../utils/dateUtils';
 import type { DoseLog, Medication, DoseStatus } from '../types';
 
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
+
 interface Props {
-  log: DoseLog;
-  medication: Medication;
-  onStatusChange: (logId: string, medicationId: string, scheduledTime: string, status: DoseStatus) => void;
+  readonly log: DoseLog;
+  readonly medication: Medication;
+  readonly onStatusChange: (logId: string, medicationId: string, scheduledTime: string, status: DoseStatus) => void;
 }
 
-const STATUS_CONFIG: Record<DoseStatus, { label: string; bg: string; text: string; icon: string }> = {
-  pending:  { label: 'Pending',  bg: Colors.primaryLight, text: Colors.primary,   icon: '⏳' },
-  taken:    { label: 'Taken',    bg: Colors.secondaryLight, text: Colors.secondary, icon: '✅' },
-  skipped:  { label: 'Skipped', bg: Colors.warningLight, text: Colors.warning,   icon: '⏭️' },
-  snoozed:  { label: 'Snoozed', bg: Colors.purpleLight, text: Colors.purple,    icon: '💤' },
-  missed:   { label: 'Missed',  bg: Colors.errorLight, text: Colors.error,     icon: '❌' },
+const STATUS_CONFIG: Record<DoseStatus, { label: string; bg: string; text: string; icon: IoniconName }> = {
+  pending:  { label: 'Pending',  bg: Colors.primaryLight,    text: Colors.primary,    icon: 'time-outline' },
+  taken:    { label: 'Taken',    bg: Colors.secondaryLight,  text: Colors.secondary,  icon: 'checkmark-circle' },
+  skipped:  { label: 'Skipped', bg: Colors.warningLight,    text: Colors.warning,    icon: 'play-skip-forward' },
+  snoozed:  { label: 'Snoozed', bg: Colors.purpleLight,     text: Colors.purple,     icon: 'moon-outline' },
+  missed:   { label: 'Missed',  bg: Colors.errorLight,      text: Colors.error,      icon: 'close-circle' },
 };
 
 export function DoseCard({ log, medication, onStatusChange }: Props) {
@@ -55,7 +58,7 @@ export function DoseCard({ log, medication, onStatusChange }: Props) {
         </View>
 
         <View style={[styles.statusBadge, { backgroundColor: cfg.bg }]}>
-          <Text style={styles.statusIcon}>{cfg.icon}</Text>
+          <Ionicons name={cfg.icon} size={13} color={cfg.text} />
           <Text style={[styles.statusText, { color: cfg.text }]}>{cfg.label}</Text>
         </View>
       </View>
@@ -63,12 +66,15 @@ export function DoseCard({ log, medication, onStatusChange }: Props) {
       {isPending && (
         <View style={styles.actions}>
           <TouchableOpacity style={[styles.actionBtn, styles.takenBtn]} onPress={handleTaken}>
-            <Text style={styles.takenBtnText}>✅ Taken</Text>
+            <Ionicons name="checkmark" size={14} color="#fff" />
+            <Text style={styles.takenBtnText}>Taken</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionBtn, styles.snoozeBtn]} onPress={handleSnooze}>
-            <Text style={styles.snoozeBtnText}>⏰ Snooze</Text>
+            <Ionicons name="alarm-outline" size={14} color={Colors.purple} />
+            <Text style={styles.snoozeBtnText}>Snooze</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionBtn, styles.skipBtn]} onPress={handleSkip}>
+            <Ionicons name="play-skip-forward-outline" size={14} color={Colors.textSecondary} />
             <Text style={styles.skipBtnText}>Skip</Text>
           </TouchableOpacity>
         </View>
@@ -113,7 +119,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 10,
   },
-  statusIcon: { fontSize: 14 },
   statusText: { fontSize: 12, fontWeight: '600' },
   actions: {
     flexDirection: 'row',
@@ -123,9 +128,12 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
     paddingVertical: 10,
     borderRadius: 10,
-    alignItems: 'center',
   },
   takenBtn: { backgroundColor: Colors.secondary },
   takenBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },

@@ -4,22 +4,25 @@ import {
   RefreshControl, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { format } from 'date-fns';
 import { Colors } from '../../constants/colors';
 import { useMedicationStore } from '../../store/medicationStore';
 import { useDoseStore } from '../../store/doseStore';
+import { useSettingsStore } from '../../store/settingsStore';
+import { scheduleSnoozeNotification } from '../../services/notificationService';
 import { DoseCard } from '../../components/DoseCard';
 import { StreakBadge } from '../../components/StreakBadge';
 import { Card } from '../../components/ui/Card';
-import { getScheduledTimesToday } from '../../utils/scheduleUtils';
-import { buildScheduledDatetime } from '../../utils/scheduleUtils';
+import { getScheduledTimesToday, buildScheduledDatetime } from '../../utils/scheduleUtils';
 import { calculateStreak } from '../../utils/adherenceUtils';
 import type { DoseLog, DoseStatus } from '../../types';
 
 export default function TodayScreen() {
   const { medications, loading: medsLoading } = useMedicationStore();
   const { logs, logDose, updateDoseStatus, snooze, load: loadDoses, loading: dosesLoading } = useDoseStore();
+  const { settings } = useSettingsStore();
 
   const todayLabel = format(new Date(), 'EEEE, MMMM d');
 
@@ -54,7 +57,9 @@ export default function TodayScreen() {
     if (logId && status !== 'snoozed') {
       await updateDoseStatus(logId, status, status === 'taken' ? new Date().toISOString() : undefined);
     } else if (status === 'snoozed' && logId) {
-      await snooze(logId, 10);
+      await snooze(logId, settings.snoozeMinutes);
+      const med = medications.find(m => m.id === medicationId);
+      if (med) await scheduleSnoozeNotification(med, scheduledTime, settings.snoozeMinutes);
     } else {
       await logDose(medicationId, scheduledTime, status);
     }
@@ -62,10 +67,10 @@ export default function TodayScreen() {
     if (status === 'taken') {
       const med = medications.find(m => m.id === medicationId);
       if (med?.pillsPerDose) {
-        useMedicationStore.getState().decrementPillCount(medicationId, med.pillsPerDose);
+        await useMedicationStore.getState().decrementPillCount(medicationId, med.pillsPerDose);
       }
     }
-  }, [medications, updateDoseStatus, snooze, logDose]);
+  }, [medications, settings.snoozeMinutes, updateDoseStatus, snooze, logDose]);
 
   const onRefresh = useCallback(async () => {
     await loadDoses();
@@ -118,18 +123,22 @@ export default function TodayScreen() {
             style={styles.refillAlert}
             onPress={() => router.push(`/medications/${med.id}`)}
           >
-            <Text style={styles.refillAlertText}>
-              💊 {med.name} — only {med.pillCount} pills left. Time to refill!
-            </Text>
+            <View style={styles.refillAlertRow}>
+              <Ionicons name="medical-outline" size={14} color={Colors.warning} />
+              <Text style={styles.refillAlertText}>
+                {med.name} — only {med.pillCount} pills left. Time to refill!
+              </Text>
+            </View>
           </TouchableOpacity>
         ))}
 
         {/* Dose List */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Today's Doses</Text>
-          {loading && todayDoses.length === 0 ? (
+          {loading && todayDoses.length === 0 && (
             <ActivityIndicator color={Colors.primary} style={{ marginTop: 24 }} />
-          ) : todayDoses.length === 0 ? (
+          )}
+          {!loading && todayDoses.length === 0 ? (
             <Card style={styles.emptyCard} variant="flat">
               <Text style={styles.emptyIcon}>🎉</Text>
               <Text style={styles.emptyTitle}>No doses today!</Text>
@@ -199,7 +208,8 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: Colors.warning,
   },
-  refillAlertText: { fontSize: 13, color: Colors.warning, fontWeight: '600' },
+  refillAlertRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  refillAlertText: { fontSize: 13, color: Colors.warning, fontWeight: '600', flex: 1 },
   section: { gap: 0 },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: Colors.textPrimary, marginBottom: 12 },
   emptyCard: { alignItems: 'center', paddingVertical: 32, gap: 8 },

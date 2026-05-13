@@ -6,6 +6,9 @@ let db: SQLite.SQLiteDatabase;
 export async function initDatabase(): Promise<void> {
   db = await SQLite.openDatabaseAsync('medreminder.db');
 
+  await db.execAsync(`PRAGMA journal_mode = WAL`);
+  await db.execAsync(`PRAGMA busy_timeout = 5000`);
+
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS medications (
       id TEXT PRIMARY KEY,

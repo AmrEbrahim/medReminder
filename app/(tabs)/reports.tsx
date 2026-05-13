@@ -8,6 +8,7 @@ import { useMedicationStore } from '../../store/medicationStore';
 import { calculateAdherence, getAdherenceLabel } from '../../utils/adherenceUtils';
 import { AdherenceChart } from '../../components/AdherenceChart';
 import { StreakBadge } from '../../components/StreakBadge';
+import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../../components/ui/Card';
 
 type Period = 'week' | 'month';
@@ -131,7 +132,7 @@ export default function ReportsScreen() {
 
         {report.totalDoses === 0 && (
           <Card style={styles.emptyCard} variant="flat">
-            <Text style={styles.emptyIcon}>📊</Text>
+            <Ionicons name="bar-chart-outline" size={48} color={Colors.textTertiary} />
             <Text style={styles.emptyTitle}>No data yet</Text>
             <Text style={styles.emptySubtitle}>Start logging doses to see your adherence reports.</Text>
           </Card>
@@ -177,7 +178,7 @@ const styles = StyleSheet.create({
   progressFill: { height: 6, borderRadius: 3 },
   medReportSub: { fontSize: 12, color: Colors.textSecondary },
   emptyCard: { alignItems: 'center', paddingVertical: 40, gap: 8 },
-  emptyIcon: { fontSize: 48 },
+
   emptyTitle: { fontSize: 18, fontWeight: '700', color: Colors.textPrimary },
   emptySubtitle: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', maxWidth: 240 },
 });

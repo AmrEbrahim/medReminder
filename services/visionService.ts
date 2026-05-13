@@ -98,6 +98,8 @@ export async function scanPrescription(imageUri: string): Promise<ScannedPrescri
   try {
     const parsed = JSON.parse(cleaned) as ScannedPrescription;
     parsed.rawText = cleaned;
+    if (parsed.medicationName) parsed.medicationName = parsed.medicationName.replace(/[®™]/g, '').trim();
+    if (parsed.genericName) parsed.genericName = parsed.genericName.replace(/[®™]/g, '').trim();
     return parsed;
   } catch (parseErr) {
     throw new Error(
